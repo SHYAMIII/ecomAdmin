@@ -3,160 +3,182 @@ import Layout from '@/components/layout/page'
 import { redirect } from 'next/navigation'
 import { ReactSortable } from 'react-sortablejs'
 import { useEffect, useState } from 'react'
-import { FadeLoader, HashLoader } from 'react-spinners'
+import { HashLoader } from 'react-spinners'
 
+const Page = () => {
+  const [tittle, setTittle] = useState('');
+  const [discription, setDiscription] = useState('');
+  const [price, setPrice] = useState('');
+  const [images, setImages] = useState([]);
+  const [categoryId, setCategoryId] = useState('');
+  const [categories, setCategories] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [redirectToProducts, setRedirectToProducts] = useState(false);
 
-const page = () => {
-  const [tittle, setTittle] = useState('')
-  const [discription, setdiscription] = useState('')
-  const [price, setPrice] = useState('')
-  const [images, setImages] = useState([])
-  const [categoryname, setCategoryname] = useState('')
-  const [categories, setCategories] = useState([])
-  const [isUploading, setIsUploading] = useState(false)
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch("/api/addCategory");
+        const data = await res.json();
+        if (data?.data) {
+          setCategories(data.data);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
-  const [productInfo, setProductInfo] = useState(null)
-  const [goToProducts, setGoToProducts] = useState(false)
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!tittle || !discription || !price) {
       alert("All fields are required!");
       return;
     }
-    // let ProductData = {
-    //   tittle: tittle,
-    //   discription: discription,
-    //   price: price
-    // }
-    const a = await fetch('/api/AddProduct',
-      {
+
+    try {
+      const res = await fetch('/api/AddProduct', {
         method: 'POST',
-        body: JSON.stringify({ tittle, discription, price, images, categoryname }),
+        body: JSON.stringify({ tittle, discription, price, images, categoryId }),
         headers: { 'Content-Type': 'application/json' }
-      }
-    )
-    const res = await a.json()
-    console.log(res)
-    setGoToProducts(true);
+      });
+      await res.json();
+      setRedirectToProducts(true);
+    } catch (error) {
+      console.error("Error saving product:", error);
+    }
+  };
+
+  if (redirectToProducts) {
+    return redirect("/Products");
   }
-  if (goToProducts) {
-    return redirect("/Products")
-  }
-
-  // useEffect(() => {
-  //   if (productInfo) {
-  //     setTittle(productInfo.tittle || '');
-  //     setdiscription(productInfo.discription || '');
-  //     setPrice(productInfo.price || ''),
-  //     categoryname(productInfo.categoryname || '');
-  //       setImages(productInfo.images || []);
-
-  //   }
-  // }, [productInfo])
-
-
-
 
   const uploadImages = async (e) => {
     const files = e.target?.files;
+    if (!files?.length) return;
 
     setIsUploading(true);
-
-
-    if (files?.length > 0) {
-      const formdata = new FormData();
-      for (const file of files) {
-        formdata.append('file', file);
-      }
-
-      const res = await fetch('/api/uploadImage', {
-        method: 'POST',
-        body: formdata,
-
-      });
-      const data = await res.json();
-      setImages(oldImage => {
-        return [...oldImage, ...data.links]
-      });
+    const formData = new FormData();
+    for (const file of files) {
+      formData.append('file', file);
     }
 
-    setIsUploading(false);
+    try {
+      const res = await fetch('/api/uploadImage', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await res.json();
+      setImages((prevImages) => [...prevImages, ...data.links]);
+    } catch (error) {
+      console.error("Error uploading images:", error);
+    } finally {
+      setIsUploading(false);
+    }
   };
-  const updateImageOrder = (e) => {
-    setImages(e);
-  }
 
-
-  useEffect(() => {
-    const fetchCategories = async () => {
-      
-      const a = await fetch("/api/addCategory")
-      const cat = await a.json();
-      setCategories(cat?.data);
-      console.log(cat.data);
-    };
-    fetchCategories()
-  
-    
-  }, [])
-  
-
+  const updateImageOrder = (newOrder) => {
+    setImages(newOrder);
+  };
 
   return (
     <Layout>
-      <form onSubmit={handleSubmit}>
-        <h1 className='text-xl text-blue-900 font-bold mb-3'>Add New Product</h1>
-        
-        <label > Name</label>
-        <input type="text" placeholder='Product name' value={tittle} onChange={(e) => { setTittle(e.target.value) }} />
-        <label >Photos of Product</label>
-        <div className="mb-2 gap-5 flex flex-wrap">
-        <ReactSortable
-          className="flex gap-1 flex-wrap"
-          list={images} 
-          setList={updateImageOrder}>
-          {!!images?.length && images.map((image) => (
-            <div className="w-24 h-24 shadow-lg border border-gray-400 rounded-lg overflow-hidden " key={image}>
-              <img className='w-full h-full object-center' src={image} alt="" />
-            </div>
-          ))}
+      <form 
+        onSubmit={handleSubmit} 
+        className="bg-gray-800 p-6 md:p-8 rounded-lg shadow-lg text-white w-full max-w-3xl mx-auto"
+      >
+        <h1 className="text-2xl font-semibold text-blue-400 mb-4 text-center">Add New Product</h1>
+
+        <label className="block mt-4 text-sm">Product Name</label>
+        <input 
+          type="text" 
+          placeholder="Enter product name" 
+          value={tittle} 
+          onChange={(e) => setTittle(e.target.value)} 
+          className="input-field"
+        />
+
+        <label className="block mt-4 text-sm">Photos of Product</label>
+        <div className="mb-3 flex flex-wrap gap-3">
+          <ReactSortable 
+            className="flex flex-wrap gap-3"
+            list={images} 
+            setList={updateImageOrder}
+          >
+            {images.map((image, index) => (
+              <div key={index} className="w-20 h-20 md:w-24 md:h-24 border rounded-md overflow-hidden shadow-md">
+                <img src={image} className="w-full h-full object-cover" alt="Product" />
+              </div>
+            ))}
           </ReactSortable>
+
           {isUploading && (
-            <div className='h-24 flex justify-center items-center'>
-              <HashLoader />
+            <div className="h-20 md:h-24 flex justify-center items-center">
+              <HashLoader color="#36D7B7" />
             </div>
           )}
-          <div className='w-24 h-24 flex justify-center items-center text-sm bg-gray-300 shadow-lg border border-gray-400 rounded-lg'>
-            <label className='flex cursor-pointer justify-center items-center gap-1'>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width={24} height={24} color={"#000000"} fill={"none"}>
-                <path d="M12 4.5L12 14.5M12 4.5C11.2998 4.5 9.99153 6.4943 9.5 7M12 4.5C12.7002 4.5 14.0085 6.4943 14.5 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                <path d="M20 16.5C20 18.982 19.482 19.5 17 19.5H7C4.518 19.5 4 18.982 4 16.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              <div>Upload</div>
-              <input onChange={uploadImages} className="hidden" type="file" />
-            </label>
-          </div>
-        </div>
-        <div className="my-">
-          {!productInfo?.images && <p className='text-sm text-gray-600'>No image uploaded</p>}
-        </div>
-        <label>Category</label>
-        <select value={categoryname} onChange={(e) => { setCategoryname(e.target.value) }} >
-          <option value="">Uncategorized</option>
-          {
-            (categories?.length>0 && categories.map((cat) => (
-              <option key={cat._id} value={cat._id}>{cat.name}</option>
-            )))
-          }
-        </select>
-        <label >Discription</label>
-        <textarea placeholder='Product discription' value={discription} onChange={(e) => { setdiscription(e.target.value) }}></textarea>
-        <label >Price (in INR)</label>
-        <input type="text" placeholder='Product price' value={price} onChange={(e) => { setPrice(e.target.value) }} />
-        <button className='btn-primary'>Save</button>
-      </form>
-    </Layout>
-  )
-}
 
-export default page
+          <label className="w-20 h-20 md:w-24 md:h-24 flex flex-col justify-center items-center bg-gray-700 rounded-md cursor-pointer">
+            <span className="text-gray-400 text-xs md:text-sm">+ Upload</span>
+            <input type="file" onChange={uploadImages} className="hidden" />
+          </label>
+        </div>
+
+        <label className="block mt-4 text-sm">Category</label>
+        <select 
+          value={categoryId} 
+          onChange={(e) => setCategoryId(e.target.value)} 
+          className="input-field"
+        >
+          <option value="">Uncategorized</option>
+          {categories.map((cat) => (
+            <option key={cat._id} value={cat._id}>{cat.name}</option>
+          ))}
+        </select>
+
+        <label className="block mt-4 text-sm">discription</label>
+        <textarea 
+          placeholder="Enter product discription" 
+          value={discription} 
+          onChange={(e) => setDiscription(e.target.value)} 
+          className="input-field h-20 md:h-24"
+        ></textarea>
+
+        <label className="block mt-4 text-sm">Price (in INR)</label>
+        <input 
+          type="text" 
+          placeholder="Enter product price" 
+          value={price} 
+          onChange={(e) => setPrice(e.target.value)} 
+          className="input-field"
+        />
+
+        <button 
+          type="submit" 
+          className="w-full bg-blue-600 hover:bg-blue-500 text-white py-2 px-4 rounded-lg mt-4 transition-all"
+        >
+          Save Product
+        </button>
+      </form>
+
+      <style jsx>{`
+        .input-field {
+          width: 100%;
+          padding: 12px;
+          margin-top: 5px;
+          border: 1px solid #444;
+          border-radius: 6px;
+          background-color: #222;
+          color: white;
+        }
+        .input-field:focus {
+          outline: none;
+          border-color: #36D7B7;
+        }
+      `}</style>
+    </Layout>
+  );
+};
+
+export default Page;

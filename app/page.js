@@ -1,30 +1,25 @@
 "use client"
 import Layout from "@/components/layout/page";
-import Nav from "@/components/nav/page";
-import { useSession, signIn, signOut } from "next-auth/react"
-
-
-
+import { useSession } from "next-auth/react";
 
 export default function Home() {
   const { data: session } = useSession();
   return (
-
     <Layout>
-      <div className="text-blue-900 justify-between flex">
-        <h2 className="text-xl font-bold">
-          Hello, <b>{session?.user?.name}</b>
+      <div className="flex justify-between items-center bg-gradient-to-r from-gray-900 via-gray-800 to-gray-700 text-white p-6 rounded-lg shadow-lg animate-fade-in">
+        <h2 className="text-2xl font-semibold tracking-wide">
+          Welcome, <b>{session?.user?.name}</b>
         </h2>
-        <div className="flex justify-between bg-slate-400 rounded-lg text-black items-center overflow-hidden   font-bold">
-          
-          <div><img src={session?.user?.image} alt="" className="w-9 h-9" /></div>
-          <span className="px-2">{session?.user?.name}</span>
+        <div className="flex items-center bg-gray-800 rounded-full px-4 py-2 shadow-md hover:bg-gray-700 transition-all">
+          <img src={session?.user?.image} alt="Profile" className="w-10 h-10 rounded-full" />
+          <span className="ml-3 text-lg font-medium">{session?.user?.name}</span>
         </div>
-        </div>
-        <div className="min-h-screen w-full items-center justify-center flex flex-col">
-          <h1 className="text-3xl font-bold">Welcome Admin</h1>
-          <p className="text-xl">You are logged in as an admin</p>
+      </div>
+      
+      <div className="flex flex-col items-center justify-center min-h-screen text-center p-4">
+        <h1 className="text-4xl font-extrabold text-gray-100 drop-shadow-lg mb-4 animate-slide-in">Admin Dashboard</h1>
+        <p className="text-lg text-gray-300">You are logged in as an admin</p>
       </div>
     </Layout>
-  )
+  );
 }

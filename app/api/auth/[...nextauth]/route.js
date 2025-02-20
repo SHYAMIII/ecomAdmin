@@ -39,56 +39,56 @@ import next from 'next'
         ],
 
         callbacks: {
-            async signIn({ user, account, profile, email, credentials }) {
-                if (account.provider === 'google') {
+            // async signIn({ user, account, profile, email, credentials }) {
+            //     if (account.provider === 'google') {
 
-                    //connect to te database
-                    await mongoose.connect(process.env.MONGODB_URI)
-                    const currentuser = await User.findOne({ email: profile.email })
-                    if (!currentuser) {
-                        const newuser = await new User({
-                            name: profile.name,
-                            email: profile.email,
-                            // profilePic: profile.image,
-                            createdAt: Date.now()
-                        })
-                        await newuser.save();
-                        user.name = newuser.name
-                        // user.image = newuser.profilePic
-                        user.id = newuser._id
+            //         //connect to te database
+            //         await mongoose.connect(process.env.MONGODB_URI)
+            //         const currentuser = await User.findOne({ email: profile.email })
+            //         if (!currentuser) {
+            //             const newuser = await new User({
+            //                 name: profile.name,
+            //                 email: profile.email,
+            //                 // profilePic: profile.image,
+            //                 createdAt: Date.now()
+            //             })
+            //             await newuser.save();
+            //             user.name = newuser.name
+            //             // user.image = newuser.profilePic
+            //             user.id = newuser._id
 
-                    }
+            //         }
 
-                    else {
-                        user.name = currentuser.name
-                        // user.image = currentuser.profilePic
-                        user.id = currentuser._id
-                    }
-                }
-                return true
-            },
+            //         else {
+            //             user.name = currentuser.name
+            //             // user.image = currentuser.profilePic
+            //             user.id = currentuser._id
+            //         }
+            //     }
+            //     return true
+            // },
             
             async session({session,token}){
-                console.log("session : ",session);
+                // console.log("session : ",session);
                 
             if(adminEmails.includes(session.user.email)){
-                // session.user.id=token.id;
-                // session.user.role='admin';
                 return session;
             }
             else{
-                return null;
+                return false
+                
             }
 
         },
-        async jwt({token,user}){
-            if(user){
-                token.id=user.id;
-            }
-            return token;
-        },
+    },
+        // async jwt({token,user}){
+        //     if(user){
+        //         token.id=user.id;
+        //     }
+        //     return token;
+        // },
           
-        },
+        // },
     };
 
 
